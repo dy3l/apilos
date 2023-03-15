@@ -94,9 +94,6 @@ if SENDINBLUE_API_KEY:
         "SENDINBLUE_API_KEY": SENDINBLUE_API_KEY,
     }
     EMAIL_BACKEND = "anymail.backends.sendinblue.EmailBackend"
-# else:
-#     # or anymail.backends.test.EmailBackend ?
-#     EMAIL_BACKEND = "django.core.mail.backends.console.EmailBackend"
 
 env_allowed_hosts = []
 try:
@@ -145,6 +142,15 @@ INSTALLED_APPS = [
     "django_celery_results",
 ]
 
+if ENVIRONMENT == "development":
+    INSTALLED_APPS.extend(
+        [
+            "django_extensions",
+            "django_browser_reload",
+        ]
+    )
+    SHELL_PLUS_PRINT_SQL = True
+
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
@@ -162,6 +168,13 @@ if not TESTING:
     MIDDLEWARE = MIDDLEWARE + [
         "whitenoise.middleware.WhiteNoiseMiddleware",
     ]
+
+if "django_browser_reload" in INSTALLED_APPS:
+    MIDDLEWARE.extend(
+        [
+            "django_browser_reload.middleware.BrowserReloadMiddleware",
+        ]
+    )
 
 ROOT_URLCONF = "core.urls"
 
@@ -189,8 +202,8 @@ try:
     # dj_database_url is used in scalingo environment to interpret the
     # connection configuration to the DB from a single URL with all path
     # and credentials
-    config("DATABASE_URL")
-    default_settings = dj_database_url.config()
+    DATABASE_URL = config("DATABASE_URL")
+    default_settings = dj_database_url.parse(DATABASE_URL)
 except decouple.UndefinedValueError:
     default_settings = {
         "ENGINE": "django.db.backends.postgresql",
@@ -261,7 +274,12 @@ USE_TZ = True
 # Static files
 STATIC_ROOT = os.path.abspath(os.path.join(BASE_DIR, "staticfiles"))
 STATIC_URL = "/static/"
-STATICFILES_DIRS = (os.path.join(BASE_DIR, "static"),)
+STATICFILES_DIRS = [
+    BASE_DIR / "static",
+    ("dsfr", BASE_DIR / "node_modules" / "@gouvfr" / "dsfr" / "dist"),
+    ("virtual-select", BASE_DIR / "node_modules" / "virtual-select-plugin" / "dist"),
+    ("turbo", BASE_DIR / "node_modules" / "@hotwired" / "turbo" / "dist"),
+]
 
 # Why STAGING = FALSE ?
 STAGING = False
@@ -429,6 +447,9 @@ SPECTACULAR_SETTINGS = {
 }
 
 APILOS_PAGINATION_PER_PAGE = 20
+APILOS_MAX_DROPDOWN_COUNT = get_env_variable(
+    "APILOS_MAX_DROPDOWN_COUNT", cast=int, default=20
+)
 
 # to do : deprecate drf_yasg
 SWAGGER_SETTINGS = {

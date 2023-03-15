@@ -1,7 +1,9 @@
 from django.http.request import HttpRequest
 from django.conf import settings
 from django.template.defaulttags import register
+from bailleurs.models import Bailleur
 from core.utils import is_valid_uuid, get_key_from_json_field
+from instructeurs.models import Administration
 from programmes.models import Financement
 from siap.siap_client.client import SIAPClient
 from conventions.models import ConventionStatut, PieceJointe
@@ -27,24 +29,35 @@ def highlight(text, search):
 
 @register.filter
 def is_bailleur(request: HttpRequest) -> bool:
-    return "currently" in request.session and request.session["currently"] in [
-        GroupProfile.STAFF,
-        GroupProfile.BAILLEUR,
-        GroupProfile.SIAP_MO_PERS_MORALE,
-        GroupProfile.SIAP_MO_PERS_PHYS,
-    ]
+    if "currently" in request.session:
+        return request.session["currently"] in GroupProfile.bailleur_profiles()
+
+    return request.user.is_bailleur()
 
 
 @register.filter
 def is_instructeur(request: HttpRequest) -> bool:
-    return "currently" in request.session and request.session["currently"] in [
-        GroupProfile.STAFF,
-        GroupProfile.INSTRUCTEUR,
-        GroupProfile.SIAP_SER_GEST,
-        GroupProfile.SIAP_ADM_CENTRALE,
-        GroupProfile.SIAP_DIR_REG,
-        GroupProfile.SIAP_SER_DEP,
-    ]
+    if "currently" in request.session:
+        return request.session["currently"] in GroupProfile.instructeur_profiles()
+    return request.user.is_instructeur()
+
+
+@register.filter
+def current_administration(request: HttpRequest) -> None | int:
+    if is_instructeur(request) and request.session["administration"]:
+        administration = Administration.objects.get(
+            id=request.session["administration"]["id"]
+        )
+        return administration.uuid
+    return None
+
+
+@register.filter
+def current_bailleur(request: HttpRequest) -> None | int:
+    if is_bailleur(request) and request.session["bailleur"]:
+        bailleur = Bailleur.objects.get(id=request.session["bailleur"]["id"])
+        return bailleur.uuid
+    return None
 
 
 @register.filter
@@ -300,6 +313,11 @@ def display_redirect_sent(convention):
 
 
 @register.filter
+def display_redirect_project(convention):
+    return settings.CERBERE_AUTH and convention.statut == ConventionStatut.PROJET
+
+
+@register.filter
 def display_redirect_post_action(convention):
     return convention.statut == ConventionStatut.SIGNEE
 
@@ -393,6 +411,12 @@ def get_text_as_list(text_field):
 @register.filter
 def negate(condition: bool):
     return not condition
+
+
+@register.filter
+def attribute(object, key):
+    """Gets an attribute of an object dynamically from a string key"""
+    return getattr(object, key, None)
 
 
 @register.filter

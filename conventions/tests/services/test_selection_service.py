@@ -1,4 +1,4 @@
-import mock
+from unittest import mock
 
 from django.contrib.sessions.middleware import SessionMiddleware
 from django.test import RequestFactory, TestCase
@@ -23,11 +23,16 @@ from users.models import GroupProfile, User
 
 
 class ConventionSelectionServiceForInstructeurTests(TestCase):
-    fixtures = ["departements.json"]
-
-    @classmethod
-    def setUpTestData(cls):
-        utils_fixtures.create_all()
+    fixtures = [
+        "auth.json",
+        "departements.json",
+        "avenant_types.json",
+        "bailleurs_for_tests.json",
+        "instructeurs_for_tests.json",
+        "programmes_for_tests.json",
+        "conventions_for_tests.json",
+        "users_for_tests.json",
+    ]
 
     def setUp(self):
         self.request = RequestFactory().get("/conventions/selection")
@@ -98,17 +103,12 @@ class ConventionSelectionServiceForInstructeurTests(TestCase):
 
     def test_get_from_zero(self):
         administration = Administration.objects.get(code="75000")
-        bailleurs = Bailleur.objects.all().order_by("nom")
         self.service.get_from_zero()
         self.assertEqual(self.service.return_status, utils.ReturnStatus.ERROR)
         self.assertIsInstance(self.service.form, ProgrammeSelectionFromZeroForm)
         self.assertEqual(
             self.service.form.declared_fields["administration"].choices,
             [(administration.uuid, str(administration))],
-        )
-        self.assertEqual(
-            self.service.form.declared_fields["bailleur"].choices,
-            [(bailleur.uuid, str(bailleur)) for bailleur in bailleurs],
         )
 
     def test_post_from_zero_failed_form(self):
@@ -200,11 +200,16 @@ class ConventionSelectionServiceForInstructeurTests(TestCase):
 
 
 class ConventionSelectionServiceForBailleurTests(TestCase):
-    fixtures = ["departements.json"]
-
-    @classmethod
-    def setUpTestData(cls):
-        utils_fixtures.create_all()
+    fixtures = [
+        "auth.json",
+        "departements.json",
+        "avenant_types.json",
+        "bailleurs_for_tests.json",
+        "instructeurs_for_tests.json",
+        "programmes_for_tests.json",
+        "conventions_for_tests.json",
+        "users_for_tests.json",
+    ]
 
     def setUp(self):
         self.request = RequestFactory().get("/conventions/selection")
@@ -293,8 +298,8 @@ class ConventionSelectionServiceForBailleurTests(TestCase):
             ],
         )
         self.assertEqual(
-            self.service.form.declared_fields["bailleur"].choices,
-            [(bailleur.uuid, str(bailleur)) for bailleur in bailleurs],
+            self.service.form.declared_fields["bailleur"].queryset.count(),
+            bailleurs.count(),
         )
 
     def test_post_from_zero_failed_form(self):

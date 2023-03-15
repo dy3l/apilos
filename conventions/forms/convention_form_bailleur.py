@@ -1,18 +1,21 @@
 from django import forms
 from django.core.exceptions import ValidationError
+from django.db.models import QuerySet
 from django.utils.safestring import mark_safe
 
-from bailleurs.models import Bailleur, SousNatureBailleur
+from bailleurs.models import Bailleur, NatureBailleur, SousNatureBailleur
 
 
 class ChangeBailleurForm(forms.Form):
-    def __init__(self, *args, bailleurs=None, **kwargs) -> None:
-        self.declared_fields["bailleur"].choices = bailleurs
+    def __init__(self, *args, bailleur_query: QuerySet, **kwargs) -> None:
+        self.declared_fields["bailleur"].queryset = bailleur_query
+
         super().__init__(*args, **kwargs)
 
-    bailleur = forms.ChoiceField(
+    bailleur = forms.ModelChoiceField(
         label="Bailleur",
-        choices=[],
+        queryset=Bailleur.objects.none(),
+        to_field_name="uuid",
         error_messages={
             "required": "Vous devez choisir un bailleur",
         },
@@ -25,6 +28,7 @@ class ConventionBailleurForm(forms.Form):
     nom = forms.CharField(
         required=True,
         label="Nom du bailleur",
+        help_text="Tel qu'il sera affiché dans la convention",
         error_messages={
             "required": "Le nom du bailleur est obligatoire",
             "max_length": "Le nom du bailleur ne doit pas excéder 255 caractères",
@@ -32,13 +36,17 @@ class ConventionBailleurForm(forms.Form):
     )
     siret = forms.CharField(
         label="SIRET",
+        min_length=7,
         max_length=14,
-        min_length=14,
         error_messages={
             "required": "Le SIRET du bailleur est obligatoire",
             "max_length": "Le SIRET doit comporter 14 caractères",
             "min_length": "Le SIRET doit comporter 14 caractères",
         },
+    )
+    siren = forms.CharField(
+        label="SIREN",
+        required=False,
     )
 
     def clean_siret(self):
@@ -105,6 +113,7 @@ class ConventionBailleurForm(forms.Form):
             "max_length": "La fonction du signataire de la convention "
             + "ne doit pas excéder 255 caractères",
         },
+        required=False,
     )
     signataire_date_deliberation = forms.DateField(
         label="Date de délibération",
@@ -115,6 +124,7 @@ class ConventionBailleurForm(forms.Form):
             "Date à laquelle le signataire a reçu le mandat lui "
             + "permettant de signer la convention"
         ),
+        required=False,
     )
     signataire_bloc_signature = forms.CharField(
         required=False,
@@ -130,6 +140,9 @@ class ConventionBailleurForm(forms.Form):
         },
     )
 
+    nature_bailleur = forms.TypedChoiceField(
+        required=False, label="Nature du bailleur", choices=NatureBailleur.choices
+    )
     sous_nature_bailleur = forms.TypedChoiceField(
         required=False, label="Type de bailleur", choices=SousNatureBailleur.choices
     )

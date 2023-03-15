@@ -8,9 +8,14 @@ urlpatterns = [
         name="home",
     ),
     path(
-        "update_currently",
-        views.update_currently,
-        name="update_currently",
+        "search/bailleur",
+        views.search_bailleur,
+        name="search_bailleur",
+    ),
+    path(
+        "search/bailleur/<bailleur_uuid>/parent",
+        views.search_parent_bailleur,
+        name="search_parent_bailleur",
     ),
     path("read_popup", views.update_user_popup, name="read_popup"),
 ]

@@ -1,9 +1,11 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponseRedirect
+from django.http import HttpResponseRedirect, JsonResponse
 from django.urls import reverse
 from django.conf import settings
 from django.contrib.auth.decorators import login_required
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
+
+from bailleurs.models import Bailleur
 
 
 def home(request):
@@ -22,12 +24,54 @@ def home(request):
 
 
 @login_required
+@require_GET
+def search_bailleur(request):
+    query = request.GET.get("q", "")
+
+    return JsonResponse(
+        [
+            {
+                "label": b.nom,
+                "value": b.uuid,
+            }
+            for b in request.user.bailleurs(full_scope=True).filter(
+                nom__icontains=query
+            )[: settings.APILOS_MAX_DROPDOWN_COUNT]
+        ],
+        safe=False,
+    )
+
+
+@login_required
+@require_GET
+def search_parent_bailleur(request, bailleur_uuid: str):
+    query = request.GET.get("q", "")
+
+    return JsonResponse(
+        [
+            {
+                "label": b.nom,
+                "value": b.uuid,
+            }
+            for b in request.user.bailleurs(full_scope=True)
+            .exclude(uuid=bailleur_uuid)
+            .filter(parent_id__isnull=True)
+            .filter(nom__icontains=query)[: settings.APILOS_MAX_DROPDOWN_COUNT]
+        ],
+        safe=False,
+    )
+
+
+@login_required
 @require_POST
-def update_currently(request):
-    if request.user.is_staff or request.user.is_superuser:
-        request.session["currently"] = request.POST.get("currently")
-        return HttpResponseRedirect(reverse("conventions:index"))
-    raise PermissionError("This function is available only for staff")
+def update_user_popup(request):
+    request.user.read_popup = "True"
+    request.user.save()
+    is_ecolo = request.POST.get("ecolo", False)
+    if is_ecolo:
+        return HttpResponseRedirect(reverse("conventions:search_completed"))
+    else:
+        return redirect(request.META.get("HTTP_REFERER", reverse("conventions:index")))
 
 
 @login_required

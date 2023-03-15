@@ -1,9 +1,8 @@
-import mock
+from unittest import mock
 
 from django.contrib.sessions.middleware import SessionMiddleware
-from django.test import RequestFactory, TestCase
+from django.test import RequestFactory, TestCase, override_settings
 from bailleurs.models import SousNatureBailleur
-from core.tests import utils_fixtures
 from conventions.views import ConventionFormSteps
 from conventions.models import (
     Convention,
@@ -16,8 +15,18 @@ from users.models import GroupProfile, User
 
 
 class CustomFiltersTest(TestCase):
+    fixtures = [
+        "auth.json",
+        # "departements.json",
+        "avenant_types.json",
+        "bailleurs_for_tests.json",
+        "instructeurs_for_tests.json",
+        "programmes_for_tests.json",
+        "conventions_for_tests.json",
+        "users_for_tests.json",
+    ]
+
     def setUp(self):
-        utils_fixtures.create_all()
         self.convention = Convention.objects.get(numero="0001")
         get_response = mock.MagicMock()
         self.request = RequestFactory().get("/conventions")
@@ -157,6 +166,26 @@ class CustomFiltersTest(TestCase):
 
         self.convention.statut = ConventionStatut.RESILIEE
         self.assertFalse(custom_filters.display_redirect_sent(self.convention))
+
+    def test_display_redirect_project_without_cerbere(self):
+        for statut in ConventionStatut:
+            self.convention.statut = statut
+            self.assertFalse(custom_filters.display_redirect_project(self.convention))
+
+    @override_settings(CERBERE_AUTH="htpps://cerbere.com")
+    def test_display_redirect_project_with_cerbere(self):
+        self.convention.statut = ConventionStatut.PROJET
+        self.assertTrue(custom_filters.display_redirect_project(self.convention))
+
+        for statut in [
+            ConventionStatut.INSTRUCTION,
+            ConventionStatut.CORRECTION,
+            ConventionStatut.A_SIGNER,
+            ConventionStatut.SIGNEE,
+            ConventionStatut.RESILIEE,
+        ]:
+            self.convention.statut = statut
+            self.assertFalse(custom_filters.display_redirect_project(self.convention))
 
     def test_display_redirect_post_action(self):
 
@@ -666,9 +695,9 @@ class CustomFiltersTest(TestCase):
             SousNatureBailleur.COOPERATIVE_HLM_SCIC,
             SousNatureBailleur.SEM_EPL,
         ]:
-            self.convention.programme.bailleur.sous_nature_bailleur = (
-                sous_nature_bailleur
-            )
+            bailleur = self.convention.programme.bailleur
+            bailleur.sous_nature_bailleur = sous_nature_bailleur
+            bailleur.save()
             for type1andtype2 in [
                 ConventionType1and2.TYPE1,
                 ConventionType1and2.TYPE2,
@@ -698,9 +727,9 @@ class CustomFiltersTest(TestCase):
             SousNatureBailleur.SACI_CAP,
             SousNatureBailleur.UES,
         ]:
-            self.convention.programme.bailleur.sous_nature_bailleur = (
-                sous_nature_bailleur
-            )
+            bailleur = self.convention.programme.bailleur
+            bailleur.sous_nature_bailleur = sous_nature_bailleur
+            bailleur.save()
 
             for nature_logement, _ in ActiveNatureLogement.choices:
                 self.convention.programme.nature_logement = nature_logement
@@ -748,9 +777,9 @@ class CustomFiltersTest(TestCase):
             SousNatureBailleur.COOPERATIVE_HLM_SCIC,
             SousNatureBailleur.SEM_EPL,
         ]:
-            self.convention.programme.bailleur.sous_nature_bailleur = (
-                sous_nature_bailleur
-            )
+            bailleur = self.convention.programme.bailleur
+            bailleur.sous_nature_bailleur = sous_nature_bailleur
+            bailleur.save()
             for type1andtype2 in [
                 ConventionType1and2.TYPE1,
                 ConventionType1and2.TYPE2,
@@ -784,9 +813,9 @@ class CustomFiltersTest(TestCase):
             SousNatureBailleur.SACI_CAP,
             SousNatureBailleur.UES,
         ]:
-            self.convention.programme.bailleur.sous_nature_bailleur = (
-                sous_nature_bailleur
-            )
+            bailleur = self.convention.programme.bailleur
+            bailleur.sous_nature_bailleur = sous_nature_bailleur
+            bailleur.save()
 
             for nature_logement, _ in ActiveNatureLogement.choices:
                 self.convention.programme.nature_logement = nature_logement

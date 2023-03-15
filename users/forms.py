@@ -1,6 +1,7 @@
 from django import forms
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
+from django.db.models import QuerySet
 from django.forms import formset_factory, BaseFormSet
 
 from apilos_settings.models import Departement
@@ -10,7 +11,19 @@ from users.models import User
 from users.type_models import TypeRole, EmailPreferences
 
 
-class UserForm(forms.Form):
+class UserNotificationForm(forms.Form):
+    preferences_email = forms.TypedChoiceField(
+        required=True,
+        initial=EmailPreferences.PARTIEL,
+        label="Option d'envoi d'e-mail",
+        choices=EmailPreferences.choices,
+        error_messages={
+            "required": "Les préférences emails sont obligatoires",
+        },
+    )
+
+
+class UserForm(UserNotificationForm):
     username = forms.CharField(
         required=True,
         label="Nom d'utilisateur",
@@ -73,16 +86,6 @@ class UserForm(forms.Form):
         help_text="Un super utilisateur a tous les droits",
     )
 
-    preferences_email = forms.TypedChoiceField(
-        required=True,
-        initial=EmailPreferences.PARTIEL,
-        label="Option d'envoi d'e-mail",
-        choices=EmailPreferences.choices,
-        error_messages={
-            "required": "Les préférences emails sont obligatoires",
-        },
-    )
-
     filtre_departements = forms.ModelMultipleChoiceField(
         queryset=Departement.objects.all(),
         label="Filtrer par départements",
@@ -105,18 +108,25 @@ class UserForm(forms.Form):
 
 
 class AddUserForm(UserForm):
-    def __init__(self, *args, bailleurs=None, administrations=None, **kwargs) -> None:
-        self.declared_fields["bailleur"].choices = bailleurs
+    bailleur = forms.ModelChoiceField(
+        required=False,
+        label="Entreprise bailleur",
+        queryset=Bailleur.objects.none(),
+        to_field_name="uuid",
+    )
+
+    def __init__(
+        self, *args, bailleur_query: QuerySet, administrations=None, **kwargs
+    ) -> None:
+        self.declared_fields["bailleur"].queryset = bailleur_query
         self.declared_fields["administration"].choices = administrations
+
         super().__init__(*args, **kwargs)
 
     user_type = forms.ChoiceField(
         required=False, label="Type d'utilisateur", choices=TypeRole.choices
     )
-    bailleur = forms.CharField(
-        required=False,
-        label="Entreprise bailleur",
-    )
+
     administration = forms.CharField(
         required=False,
         label="Administration",
@@ -153,8 +163,6 @@ class AddUserForm(UserForm):
                         "administration",
                         ("L'administration est obligatoire"),
                     )
-
-        user_type = cleaned_data.get("user_type")
 
 
 class UserBailleurForm(forms.Form):
@@ -203,8 +211,7 @@ class UserBailleurForm(forms.Form):
     )
 
     def __init__(self, *args, bailleur_queryset=None, **kwargs) -> None:
-        if bailleur_queryset:
-            self.declared_fields["bailleur"].queryset = bailleur_queryset
+        self.declared_fields["bailleur"].queryset = bailleur_queryset
 
         super().__init__(*args, **kwargs)
 
@@ -237,15 +244,18 @@ UserBailleurFormSet = formset_factory(
 
 
 class AddBailleurForm(forms.Form):
-    def __init__(self, *args, bailleurs=None, **kwargs) -> None:
-        self.declared_fields["bailleur"].choices = bailleurs
+    def __init__(self, *args, bailleur_query: QuerySet, **kwargs) -> None:
+        self.declared_fields["bailleur"].queryset = bailleur_query
+
         super().__init__(*args, **kwargs)
 
-    bailleur = forms.CharField(
+    bailleur = forms.ModelChoiceField(
         label="",
         error_messages={
             "required": "Merci de sélectionner un Bailleur",
         },
+        queryset=Bailleur.objects.none(),
+        to_field_name="uuid",
     )
 
 

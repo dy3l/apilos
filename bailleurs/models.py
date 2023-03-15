@@ -100,7 +100,7 @@ class Bailleur(IngestableModel):
     )
     nom = models.CharField(max_length=255)
     siret = models.CharField(max_length=255, unique=True)
-    siren = models.CharField(max_length=9, null=True)
+    siren = models.CharField(max_length=255, null=True)
     capital_social = models.FloatField(null=True, blank=True)
     adresse = models.CharField(max_length=255, null=True, blank=True)
     code_postal = models.CharField(max_length=5, null=True, blank=True)
@@ -137,14 +137,10 @@ class Bailleur(IngestableModel):
     label = property(_get_nom)
 
     def is_hlm(self):
-        return self.sous_nature_bailleur in [
-            SousNatureBailleur.OFFICE_PUBLIC_HLM,
-            SousNatureBailleur.SA_HLM_ESH,
-            SousNatureBailleur.COOPERATIVE_HLM_SCIC,
-        ]
+        return self.nature_bailleur == NatureBailleur.HLM
 
     def is_sem(self):
-        return self.sous_nature_bailleur in [SousNatureBailleur.SEM_EPL]
+        return self.nature_bailleur == NatureBailleur.SEM
 
     def is_type1and2(self):
         return not self.is_hlm() and not self.is_sem()
@@ -158,3 +154,8 @@ class Bailleur(IngestableModel):
 def set_bailleur_nature(sender, instance, *args, **kwargs):
     if instance.sous_nature_bailleur in NATURE_RELATIONSHIP:
         instance.nature_bailleur = NATURE_RELATIONSHIP[instance.sous_nature_bailleur]
+    if not instance.siren:
+        if len(instance.siret) == 14 and instance.siret.isdigit():
+            instance.siren = instance.siret[:9]
+        else:
+            instance.siren = instance.siret

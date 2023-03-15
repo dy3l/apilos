@@ -29,6 +29,26 @@ class GroupProfile(models.TextChoices):
     SIAP_MO_PERS_MORALE = "MO_PERS_MORALE", "Maitre d'ouvrage - personne morale"
     SIAP_MO_PERS_PHYS = "MO_PERS_PHYS", "Maitre d'ouvrage - personne physique"
 
+    @classmethod
+    def instructeur_profiles(cls):
+        return [
+            GroupProfile.STAFF,
+            GroupProfile.INSTRUCTEUR,
+            GroupProfile.SIAP_SER_GEST,
+            GroupProfile.SIAP_ADM_CENTRALE,
+            GroupProfile.SIAP_DIR_REG,
+            GroupProfile.SIAP_SER_DEP,
+        ]
+
+    @classmethod
+    def bailleur_profiles(cls):
+        return [
+            GroupProfile.STAFF,
+            GroupProfile.BAILLEUR,
+            GroupProfile.SIAP_MO_PERS_MORALE,
+            GroupProfile.SIAP_MO_PERS_PHYS,
+        ]
+
 
 class User(AbstractUser):
     # pylint: disable=R0904
@@ -130,6 +150,13 @@ class User(AbstractUser):
             return self.roles.filter(bailleur_id=bailleur_id)
         return self._is_role(TypeRole.BAILLEUR) or self.is_superuser
 
+    def get_active_bailleurs(self):
+        return (
+            self.roles.filter(typologie=TypeRole.BAILLEUR)
+            .values_list("bailleur", flat=True)
+            .distinct()
+        )
+
     def is_instructeur(self):
         if self.is_cerbere_user():
             return "currently" in self.siap_habilitation and self.siap_habilitation[
@@ -141,6 +168,13 @@ class User(AbstractUser):
                 GroupProfile.SIAP_ADM_CENTRALE,
             ]
         return self._is_role(TypeRole.INSTRUCTEUR) or self.is_superuser
+
+    def get_active_administrations(self):
+        return (
+            self.roles.filter(typologie=TypeRole.INSTRUCTEUR)
+            .values_list("administration", flat=True)
+            .distinct()
+        )
 
     def is_administration(self):
         if self.is_cerbere_user():
@@ -437,6 +471,9 @@ class User(AbstractUser):
 
 
 class Role(models.Model):
+    class Meta:
+        unique_together = ("typologie", "bailleur", "administration", "user")
+
     id = models.AutoField(primary_key=True)
     typologie = models.CharField(
         max_length=25,
