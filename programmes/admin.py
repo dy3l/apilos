@@ -42,7 +42,17 @@ class ProgrammeAdmin(admin.ModelAdmin):
 
 admin.site.register(Programme, ProgrammeAdmin)
 admin.site.register(ReferenceCadastrale)
-admin.site.register(Lot)
+
+
+class LotAdmin(admin.ModelAdmin):
+    readonly_fields = (
+        "uuid",
+        "programme",
+        "parent",
+    )
+
+
+admin.site.register(Lot, LotAdmin)
 admin.site.register(Logement)
 admin.site.register(Annexe)
 admin.site.register(TypeStationnement)
