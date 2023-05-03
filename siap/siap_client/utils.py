@@ -15,6 +15,10 @@ from users.models import User
 from conventions.models import Convention
 
 
+class IncompleteBailleurDataException(Exception):
+    pass
+
+
 def get_or_create_conventions(operation: dict, user: User):
     try:
         # Waiting fix on SIAP
@@ -53,9 +57,22 @@ def get_or_create_conventions(operation: dict, user: User):
 
 
 def get_or_create_bailleur(bailleur_from_siap: dict):
+    # Siret
+    siret = (
+        bailleur_from_siap["siret"]
+        if "siret" in bailleur_from_siap
+        else bailleur_from_siap["siren"]
+    )
+
+    if siret is None or siret == "":
+        raise IncompleteBailleurDataException(
+            "Les informations concernant le SIRET / SIREN du bailleur sont manquantes"
+        )
+
     # Nom
     if "nom" in bailleur_from_siap:
         nom = bailleur_from_siap["nom"]
+
     elif "raisonSociale" in bailleur_from_siap:
         nom = bailleur_from_siap["raisonSociale"]
 
@@ -70,12 +87,6 @@ def get_or_create_bailleur(bailleur_from_siap: dict):
 
     if "adresseLigne" in bailleur_from_siap:
         adresse = bailleur_from_siap["adresseLigne"]
-
-    siret = (
-        bailleur_from_siap["siret"]
-        if "siret" in bailleur_from_siap
-        else bailleur_from_siap["siren"]
-    )
 
     (bailleur, is_created) = Bailleur.objects.get_or_create(
         siren=bailleur_from_siap["siren"],
