@@ -1,6 +1,10 @@
 """
 Manage Auth backends
 """
+from typing import Optional
+
+from django.contrib.auth.models import User
+from django.http import HttpRequest
 from django_cas_ng.backends import CASBackend
 
 from django.contrib.auth.backends import ModelBackend
@@ -17,6 +21,19 @@ class CerbereCASBackend(CASBackend):
 
     def user_can_authenticate(self, user):
         return True
+
+
+class InMemoryCASBackend(CerbereCASBackend):
+    """
+    Mock auth backend for CERBERE
+    """
+
+    def authenticate(
+        self, request: HttpRequest, ticket: str, service: str
+    ) -> Optional[User]:
+        print("YOUPI")
+
+        return User.objects.filter(cerbere_login=ticket).first()
 
 
 UserModel = get_user_model()

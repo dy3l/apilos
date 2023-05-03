@@ -240,6 +240,30 @@
     }
   },
   {
+    "model": "users.user",
+    "pk": 11,
+    "fields": {
+      "password": "",
+      "last_login": null,
+      "is_superuser": false,
+      "username": "josiane.instructrice",
+      "first_name": "Josiane",
+      "last_name": "Instructrice",
+      "email": "josiane@apilos.com",
+      "is_staff": false,
+      "is_active": true,
+      "date_joined": "2023-03-08T20:43:45.713Z",
+      "administrateur_de_compte": false,
+      "telephone": null,
+      "cerbere_login": "josiane@apilos.com",
+      "preferences_email": "PARTIEL",
+      "creator": null,
+      "groups": [],
+      "user_permissions": [],
+      "filtre_departements": []
+    }
+  },
+  {
     "model": "users.role",
     "pk": 1,
     "fields": {

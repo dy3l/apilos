@@ -471,9 +471,14 @@ if CERBERE_AUTH:
         "siap.custom_middleware.CerbereSessionMiddleware",
     ]
 
-    AUTHENTICATION_BACKENDS = AUTHENTICATION_BACKENDS + [
-        "core.backends.CerbereCASBackend",
-    ]  # custom backend CAS
+    if TESTING:
+        AUTHENTICATION_BACKENDS += [
+            "core.backends.InMemoryCASBackend",
+        ]
+    else:
+        AUTHENTICATION_BACKENDS += [
+            "core.backends.CerbereCASBackend",
+        ]  # custom backend CAS
 
     # CAS config
     CAS_SERVER_URL = CERBERE_AUTH

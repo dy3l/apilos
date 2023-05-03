@@ -29,6 +29,7 @@ python-box>=6.0
 python-decouple>=3.4
 python-docx>=0.8.11
 redis
+responses>=0.23
 sentry-sdk>=1.5.1
 tenacity
 tqdm>=4.0
