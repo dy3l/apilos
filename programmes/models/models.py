@@ -55,6 +55,7 @@ class Programme(IngestableModel):
         on_delete=models.CASCADE,
         null=True,
     )
+
     uuid = models.UUIDField(default=uuid.uuid4, editable=False)
     nom = models.CharField(max_length=255)
     numero_galion = models.CharField(max_length=255, null=True)
