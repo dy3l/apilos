@@ -14,7 +14,7 @@
                 {% else %}
                     <div class="apilos-text--italic">
                         {% if CERBERE_AUTH and convention.programme.numero_galion %}
-                            <a href="{% url 'programmes:operation_conventions' numero_operation=convention.programme.numero_galion %}">
+                            <a href="{% url 'programmes:operation_conventions' numero_operation=convention.programme.numero_galion|urlencode %}">
                                 Opération n°{{convention.programme.numero_galion}}
                             </a>&nbsp;-&nbsp;
                         {% endif %}
