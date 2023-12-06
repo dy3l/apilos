@@ -18,6 +18,7 @@ from django.http import (
 )
 from django.shortcuts import get_object_or_404, render
 from django.urls import resolve, reverse
+from django.utils.functional import cached_property
 from django.views import View
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from zipfile import ZipFile
@@ -166,6 +167,7 @@ class ConventionSearchView(LoginRequiredMixin, ConventionTabsMixin, View):
             ("statut", "cstatut"),
             ("bailleur", "bailleur"),
             ("administration", "administration"),
+            ("year", "year"),
         ]
         search_filters = {
             arg: self._get_non_empty_query_param(query_param)
@@ -197,6 +199,15 @@ class ConventionSearchView(LoginRequiredMixin, ConventionTabsMixin, View):
 
         return None
 
+    @cached_property
+    def years_choices(self) -> list[str]:
+        try:
+            earliest = Convention.objects.earliest("cree_le").cree_le.year
+        except Convention.DoesNotExist:
+            earliest = 1990  # fallback value
+        years = sorted(range(earliest, date.today().year + 1), reverse=True)
+        return [str(year) for year in years]
+
     def all_conventions_count(self, tabs):
         return sum(tab["count"] for tab in tabs)
 
@@ -225,6 +236,7 @@ class ConventionSearchView(LoginRequiredMixin, ConventionTabsMixin, View):
                 "tabs": tabs,
                 "total_conventions": request.user.conventions().count(),
                 "order_by": self._get_non_empty_query_param("order_by", ""),
+                "years": self.years_choices,
             },
         )
 
