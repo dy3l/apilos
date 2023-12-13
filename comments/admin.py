@@ -18,6 +18,7 @@ class CommentAdmin(admin.ModelAdmin):
         "statut",
     )
     list_filter = ("statut",)
+    search_fields = ("uuid",)
 
     @admin.display(description="Objet lié")
     def linked_object(self, obj: Comment) -> str:

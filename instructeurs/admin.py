@@ -6,8 +6,8 @@ from .models import (
 
 
 class AdministrationAdmin(admin.ModelAdmin):
-    search_fields = ["nom", "code"]
-    list_display = ["nom", "code", "ville_signature"]
+    search_fields = ["uuid", "nom", "code"]
+    list_display = ["uuid", "nom", "code", "ville_signature"]
 
 
 admin.site.register(Administration, AdministrationAdmin)

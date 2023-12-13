@@ -79,6 +79,7 @@ class PretAdmin(admin.ModelAdmin):
         "montant",
     )
     readonly_fields = ("convention",)
+    search_fields = ("uuid",)
 
 
 admin.site.register(AvenantType)

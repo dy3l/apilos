@@ -33,6 +33,7 @@ class ProgrammeAdmin(admin.ModelAdmin):
         "administration",
         "bailleur",
     )
+    search_fields = ("uuid",)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if db_field.name == "administration":
@@ -68,6 +69,8 @@ class LotAdmin(admin.ModelAdmin):
 
     list_select_related = ("programme",)
 
+    search_fields = ("uuid",)
+
 
 @admin.register(Annexe)
 class AnnexeAdmin(admin.ModelAdmin):
@@ -79,10 +82,12 @@ class LogementAdmin(admin.ModelAdmin):
     readonly_fields = ("lot",)
     list_display = (
         "id",
+        "uuid",
         "lot",
         "typologie",
         "designation",
     )
+    search_fields = ("uuid",)
 
 
 @admin.register(ReferenceCadastrale)
