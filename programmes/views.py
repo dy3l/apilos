@@ -24,21 +24,21 @@ def operation_conventions(request, numero_operation):
         return HttpResponseRedirect(
             f"{reverse('conventions:search_instruction')}?search_input={exc.numero_operation}"
         )
-    else:
-        service = ProgrammeConventionSearchService(programme)
-        paginator = service.paginate()
 
-        return render(
-            request,
-            "operations/conventions.html",
-            {
-                "url_name": resolve(request.path_info).url_name,
-                "order_by": request.GET.get("order_by", ""),
-                "numero_operation": numero_operation,
-                "programme": programme,
-                "conventions": paginator.get_page(request.GET.get("page", 1)),
-                "filtered_conventions_count": paginator.count,
-                "all_conventions_count": paginator.count,
-                "search_input": "",
-            },
-        )
+    service = ProgrammeConventionSearchService(programme)
+    paginator = service.paginate()
+
+    return render(
+        request,
+        "operations/conventions.html",
+        {
+            "url_name": resolve(request.path_info).url_name,
+            "order_by": request.GET.get("order_by", ""),
+            "numero_operation": numero_operation,
+            "programme": programme,
+            "conventions": paginator.get_page(request.GET.get("page", 1)),
+            "filtered_conventions_count": paginator.count,
+            "all_conventions_count": paginator.count,
+            "search_input": "",
+        },
+    )
