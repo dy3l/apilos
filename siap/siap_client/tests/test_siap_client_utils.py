@@ -1,7 +1,7 @@
 from django.test import TestCase
 
 from bailleurs.models import Bailleur
-from core.exceptions.types import (
+from siap.exceptions import (
     InconsistentDataSIAPException,
     NoConventionForOperationSIAPException,
 )

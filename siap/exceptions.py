@@ -36,3 +36,7 @@ class NotHandledBailleurPriveSIAPException(SIAPException):
 
 class FusionAPISIAPException(SIAPException):
     pass
+
+
+class DuplicationSIAPException(SIAPException):
+    pass

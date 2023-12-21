@@ -2,10 +2,11 @@ import re
 
 from bailleurs.models import Bailleur, NatureBailleur
 from conventions.models import Convention, ConventionStatut
-from core.exceptions.types import (
+from siap.exceptions import (
     InconsistentDataSIAPException,
     NoConventionForOperationSIAPException,
     NotHandledBailleurPriveSIAPException,
+    DuplicationSIAPException,
 )
 from instructeurs.models import Administration
 from programmes.models import (
@@ -47,18 +48,21 @@ def get_or_create_conventions(operation: dict, user: User):
         raise KeyError(
             f"Operation not well formatted, related to `donneesMo` : {operation}"
         ) from ke
+
     try:
         administration = get_or_create_administration(operation["gestionnaire"])
     except (KeyError, TypeError) as ke:
         raise KeyError(
             f"Operation not well formatted, related to `gestionnaire` : {operation}"
         ) from ke
+
     try:
         programme = get_or_create_programme(operation, bailleur, administration)
     except (KeyError, TypeError) as ke:
         raise KeyError(
             f"Operation not well formatted, missing programme's informations : {operation}"
         ) from ke
+
     try:
         (lots, conventions) = get_or_create_lots_and_conventions(
             operation, programme, user
@@ -67,6 +71,7 @@ def get_or_create_conventions(operation: dict, user: User):
         raise KeyError(
             f"Operation not well formatted, missing lot and convention informations : {operation}"
         ) from ke
+
     return (programme, lots, conventions)
 
 
@@ -225,31 +230,35 @@ def get_or_create_programme(
     ):
         raise NoConventionForOperationSIAPException()
 
-    (programme, _) = Programme.objects.get_or_create(
-        numero_galion=programme_from_siap["donneesOperation"]["numeroOperation"],
-        parent=None,
-        defaults={
-            "bailleur": bailleur,
-            "administration": administration,
-            "nom": programme_from_siap["donneesOperation"]["nomOperation"],
-            "adresse": adresse,
-            "code_postal": code_postal,
-            "ville": ville,
-            "code_insee_commune": programme_from_siap["donneesLocalisation"]["commune"][
-                "codeInsee"
-            ],
-            "code_insee_departement": programme_from_siap["donneesLocalisation"][
-                "departement"
-            ]["codeInsee"],
-            "code_insee_region": programme_from_siap["donneesLocalisation"]["region"][
-                "codeInsee"
-            ],
-            "zone_abc": programme_from_siap["donneesLocalisation"]["zonage123"],
-            "zone_123": programme_from_siap["donneesLocalisation"]["zonageABC"],
-            "type_operation": type_operation,
-            "nature_logement": nature_logement,
-        },
-    )
+    try:
+        (programme, _) = Programme.objects.get_or_create(
+            numero_galion=programme_from_siap["donneesOperation"]["numeroOperation"],
+            parent=None,
+            defaults={
+                "bailleur": bailleur,
+                "administration": administration,
+                "nom": programme_from_siap["donneesOperation"]["nomOperation"],
+                "adresse": adresse,
+                "code_postal": code_postal,
+                "ville": ville,
+                "code_insee_commune": programme_from_siap["donneesLocalisation"][
+                    "commune"
+                ]["codeInsee"],
+                "code_insee_departement": programme_from_siap["donneesLocalisation"][
+                    "departement"
+                ]["codeInsee"],
+                "code_insee_region": programme_from_siap["donneesLocalisation"][
+                    "region"
+                ]["codeInsee"],
+                "zone_abc": programme_from_siap["donneesLocalisation"]["zonage123"],
+                "zone_123": programme_from_siap["donneesLocalisation"]["zonageABC"],
+                "type_operation": type_operation,
+                "nature_logement": nature_logement,
+            },
+        )
+    except Programme.MultipleObjectsReturned:
+        raise DuplicationSIAPException()
+
     # force nature_logement and administration
     programme.nature_logement = nature_logement
     programme.administration = administration

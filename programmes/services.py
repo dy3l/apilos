@@ -3,7 +3,7 @@ from datetime import date
 
 from django.db.models import Q
 
-from core.exceptions.types import SIAPException
+from siap.exceptions import SIAPException
 from programmes.models import IndiceEvolutionLoyer, NatureLogement
 from siap.siap_client.client import SIAPClient
 from siap.siap_client.utils import get_or_create_conventions

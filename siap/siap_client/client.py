@@ -9,7 +9,7 @@ from django.conf import settings
 from django.core.exceptions import PermissionDenied
 from tenacity import retry, retry_if_exception_type, stop_after_attempt
 
-from core.exceptions.types import (
+from siap.exceptions import (
     SIAPException,
     TimeoutSIAPException,
     UnauthorizedSIAPException,
