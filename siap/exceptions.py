@@ -38,5 +38,5 @@ class FusionAPISIAPException(SIAPException):
     pass
 
 
-class DuplicationSIAPException(SIAPException):
-    pass
+class DuplicatedOperationSIAPException(SIAPException):
+    numero_operation = None

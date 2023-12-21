@@ -6,7 +6,7 @@ from siap.exceptions import (
     InconsistentDataSIAPException,
     NoConventionForOperationSIAPException,
     NotHandledBailleurPriveSIAPException,
-    DuplicationSIAPException,
+    DuplicatedOperationSIAPException,
 )
 from instructeurs.models import Administration
 from programmes.models import (
@@ -18,6 +18,10 @@ from programmes.models import (
     TypeOperation,
 )
 from users.models import User
+import logging
+
+
+logger = logging.getLogger(__name__)
 
 ADDRESS_PC_CITY = "adresseLigne6"
 ADDRESS_LINE_RAW = "adresseLigne4"
@@ -256,8 +260,13 @@ def get_or_create_programme(
                 "nature_logement": nature_logement,
             },
         )
-    except Programme.MultipleObjectsReturned:
-        raise DuplicationSIAPException()
+    except Programme.MultipleObjectsReturned as exc:
+        logger.error(exc)
+
+        # TODO: check other elements
+        raise DuplicatedOperationSIAPException(
+            numero_operation=programme_from_siap["donneesOperation"]["numeroOperation"]
+        )
 
     # force nature_logement and administration
     programme.nature_logement = nature_logement
