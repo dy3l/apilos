@@ -1,14 +1,8 @@
+import logging
 import re
 
 from bailleurs.models import Bailleur, NatureBailleur
 from conventions.models import Convention, ConventionStatut
-from siap.exceptions import (
-    InconsistentDataSIAPException,
-    NoConventionForOperationSIAPException,
-    NotHandledBailleurPriveSIAPException,
-    DuplicatedOperationSIAPException,
-    OperationToRepairSIAPException,
-)
 from instructeurs.models import Administration
 from programmes.models import (
     Financement,
@@ -18,9 +12,14 @@ from programmes.models import (
     TypeHabitat,
     TypeOperation,
 )
+from siap.exceptions import (
+    DuplicatedOperationSIAPException,
+    InconsistentDataSIAPException,
+    NoConventionForOperationSIAPException,
+    NotHandledBailleurPriveSIAPException,
+    OperationToRepairSIAPException,
+)
 from users.models import User
-import logging
-
 
 logger = logging.getLogger(__name__)
 

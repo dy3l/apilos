@@ -1,12 +1,10 @@
 from django.contrib.auth.decorators import login_required
-from django.shortcuts import render
-from django.urls import resolve
 from django.http import HttpResponseRedirect
-from django.urls import reverse
+from django.shortcuts import render
+from django.urls import resolve, reverse
 
 from conventions.services.search import ProgrammeConventionSearchService
 from programmes.services import get_or_create_conventions_from_operation_number
-
 from siap.exceptions import DuplicatedOperationSIAPException
 
 
