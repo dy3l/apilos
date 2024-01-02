@@ -7,6 +7,7 @@ from siap.exceptions import (
     NoConventionForOperationSIAPException,
     NotHandledBailleurPriveSIAPException,
     DuplicatedOperationSIAPException,
+    OperationToRepairSIAPException,
 )
 from instructeurs.models import Administration
 from programmes.models import (
@@ -262,10 +263,8 @@ def get_or_create_programme(
         )
     except Programme.MultipleObjectsReturned as exc:
         logger.error(exc)
-
-        # TODO: check other elements
-        raise DuplicatedOperationSIAPException(
-            numero_operation=programme_from_siap["donneesOperation"]["numeroOperation"]
+        _analyze_duplicate_programme(
+            num_operation=programme_from_siap["donneesOperation"]["numeroOperation"]
         )
 
     # force nature_logement and administration
@@ -276,6 +275,23 @@ def get_or_create_programme(
         programme.type_operation = TypeOperation.SANSTRAVAUX
     programme.save()
     return programme
+
+
+def _analyze_duplicate_programme(num_operation: str):
+    duplicates = Programme.objects.filter(
+        numero_galion=num_operation, parent__isnull=True
+    ).all()
+
+    requires_action = False
+    # TODO: check if it is a real duplicate or a bug
+    for duplicate in duplicates:
+        # raise ToRepairOperationSIAPException(numero_operation=num_operation)
+        pass
+
+    if requires_action:
+        raise OperationToRepairSIAPException(numero_operation=num_operation)
+
+    raise DuplicatedOperationSIAPException(numero_operation=num_operation)
 
 
 def get_or_create_lots_and_conventions(

@@ -40,3 +40,11 @@ class FusionAPISIAPException(SIAPException):
 
 class DuplicatedOperationSIAPException(SIAPException):
     numero_operation = None
+
+    def __init__(self, numero_operation):
+        self.numero_operation = numero_operation
+        super().__init__(f"Operation {numero_operation} already exists in SIAP")
+
+
+class OperationToRepairSIAPException(DuplicatedOperationSIAPException):
+    pass
