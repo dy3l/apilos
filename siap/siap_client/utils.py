@@ -12,7 +12,7 @@ from programmes.models import (
     TypeHabitat,
     TypeOperation,
 )
-from programmes.services import diff_programme_duplication
+from programmes.utils import diff_programme_duplication
 from siap.exceptions import (
     DuplicatedOperationSIAPException,
     InconsistentDataSIAPException,

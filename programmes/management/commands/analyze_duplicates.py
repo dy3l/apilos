@@ -5,7 +5,7 @@ from django.core.management import BaseCommand
 from django.db.models import Count
 
 from programmes.models import Programme
-from programmes.services import diff_programme_duplication
+from programmes.utils import diff_programme_duplication
 
 
 class Command(BaseCommand):
@@ -34,8 +34,8 @@ class Command(BaseCommand):
                 nb_diff += 1
                 duplicate["diff"] = diff
 
-        print(f"Nombre de doublons: {len(duplicates)}")
-        print(f"Nombre de doublons avec diff: {nb_diff}")
+        self.stdout.write(f"Nombre de doublons: {len(duplicates)}")
+        self.stdout.write(f"Nombre de doublons avec diff: {nb_diff}")
 
         output_filepath = "/tmp/programme_duplicates.json"
         with open(output_filepath, "w") as f:
