@@ -42,7 +42,7 @@ class ProgrammeAdmin(ApilosModelAdmin):
             kwargs["queryset"] = Bailleur.objects.order_by("nom")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-    search_fields = ["nom"]
+    search_fields = ["nom", "numero_galion"]
 
 
 @admin.display(description="Programme")

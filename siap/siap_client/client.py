@@ -171,7 +171,10 @@ def create_entity_from_habilitation_if_not_exists(habilitation):
 class SIAPClientRemote(SIAPClientInterface):
     def get_siap_config(self) -> dict:
         response = _call_siap_api("/config")
-        return response.json()
+        try:
+            return response.json()
+        except requests.exceptions.JSONDecodeError:
+            raise PermissionDenied(f"SIAP error returned: {response.text}")
 
     def update_siap_config(self) -> None:
         config = self.get_siap_config()
