@@ -1,3 +1,6 @@
+from typing import Any
+
+
 class SIAPException(Exception):
     pass
 
@@ -39,12 +42,16 @@ class FusionAPISIAPException(SIAPException):
 
 
 class DuplicatedOperationSIAPException(SIAPException):
-    numero_operation = None
+    numero_operation: str
 
-    def __init__(self, numero_operation):
+    def __init__(self, numero_operation: str):
         self.numero_operation = numero_operation
-        super().__init__(f"Operation {numero_operation} already exists in SIAP")
+        super().__init__(f"L'opération {numero_operation} est en doublon")
 
 
 class OperationToRepairSIAPException(DuplicatedOperationSIAPException):
-    pass
+    diff: dict[str, Any] = None
+
+    def __init__(self, numero_operation: str, diff: dict[str, Any]):
+        super().__init__(numero_operation)
+        self.diff = diff

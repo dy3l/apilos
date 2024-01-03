@@ -12,6 +12,7 @@ from programmes.models import (
     TypeHabitat,
     TypeOperation,
 )
+from programmes.services import diff_programme_duplication
 from siap.exceptions import (
     DuplicatedOperationSIAPException,
     InconsistentDataSIAPException,
@@ -261,9 +262,13 @@ def get_or_create_programme(
             },
         )
     except Programme.MultipleObjectsReturned:
-        _analyze_duplicate_programme(
-            num_operation=programme_from_siap["donneesOperation"]["numeroOperation"]
-        )
+        numero_operation = programme_from_siap["donneesOperation"]["numeroOperation"]
+
+        diff = diff_programme_duplication(numero_operation=numero_operation)
+        if len(diff):
+            raise OperationToRepairSIAPException(numero_operation=numero_operation)
+
+        raise DuplicatedOperationSIAPException(numero_operation=numero_operation)
 
     # force nature_logement and administration
     programme.nature_logement = nature_logement
@@ -273,21 +278,6 @@ def get_or_create_programme(
         programme.type_operation = TypeOperation.SANSTRAVAUX
     programme.save()
     return programme
-
-
-def _analyze_duplicate_programme(num_operation: str) -> None:
-    bailleur_ids = []
-    administration_ids = []
-    for prog in Programme.objects.filter(
-        numero_galion=num_operation, parent__isnull=True
-    ).all():
-        bailleur_ids.append(prog.bailleur_id)
-        administration_ids.append(prog.administration_id)
-
-    if len(set(bailleur_ids)) > 1 or len(set(administration_ids)) > 1:
-        raise OperationToRepairSIAPException(numero_operation=num_operation)
-
-    raise DuplicatedOperationSIAPException(numero_operation=num_operation)
 
 
 def get_or_create_lots_and_conventions(

@@ -1,9 +1,10 @@
 import functools
+from collections import defaultdict
 from datetime import date
 
 from django.db.models import Q
 
-from programmes.models import IndiceEvolutionLoyer, NatureLogement
+from programmes.models import IndiceEvolutionLoyer, NatureLogement, Programme
 from siap.exceptions import SIAPException
 from siap.siap_client.client import SIAPClient
 from siap.siap_client.utils import get_or_create_conventions
@@ -58,3 +59,21 @@ class LoyerRedevanceUpdateComputer:
             evolutions,
             montant_initial,
         )
+
+
+def diff_programme_duplication(numero_operation: str) -> dict[str, list]:
+    diff = defaultdict(list)
+
+    for prog in Programme.objects.filter(
+        parent__isnull=False, numero_galion=numero_operation
+    ).all():
+        for f in [
+            "administration_id",
+            "bailleur_id",
+            # "adresse",
+            # "code_postal",
+            # "ville",
+        ]:
+            diff[f].append(getattr(prog, f, None))
+
+    return {k: list(set(v)) for k, v in diff.items() if len(set(v)) > 1}
