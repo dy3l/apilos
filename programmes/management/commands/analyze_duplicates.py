@@ -33,7 +33,8 @@ class Command(BaseCommand):
 
     def list_duplicates(self) -> list[dict[str, Any]]:
         qs = (
-            Programme.objects.filter(numero_galion__regex=r"^\w{13}$")
+            Programme.objects.exclude(conventions__isnull=True)
+            .filter(numero_galion__regex=r"^\w{13}$")
             .values("numero_galion")
             .annotate(count=Count("numero_galion"))
             .filter(count__gt=1)

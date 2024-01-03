@@ -260,8 +260,7 @@ def get_or_create_programme(
                 "nature_logement": nature_logement,
             },
         )
-    except Programme.MultipleObjectsReturned as exc:
-        logger.error(exc)
+    except Programme.MultipleObjectsReturned:
         _analyze_duplicate_programme(
             num_operation=programme_from_siap["donneesOperation"]["numeroOperation"]
         )
@@ -276,18 +275,16 @@ def get_or_create_programme(
     return programme
 
 
-def _analyze_duplicate_programme(num_operation: str):
-    duplicates = Programme.objects.filter(
+def _analyze_duplicate_programme(num_operation: str) -> None:
+    bailleur_ids = []
+    administration_ids = []
+    for prog in Programme.objects.filter(
         numero_galion=num_operation, parent__isnull=True
-    ).all()
+    ).all():
+        bailleur_ids.append(prog.bailleur_id)
+        administration_ids.append(prog.administration_id)
 
-    requires_action = False
-    # TODO: check if it is a real duplicate or a bug
-    for duplicate in duplicates:
-        # raise ToRepairOperationSIAPException(numero_operation=num_operation)
-        pass
-
-    if requires_action:
+    if len(set(bailleur_ids)) > 1 or len(set(administration_ids)) > 1:
         raise OperationToRepairSIAPException(numero_operation=num_operation)
 
     raise DuplicatedOperationSIAPException(numero_operation=num_operation)
