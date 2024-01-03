@@ -17,7 +17,11 @@ from .models import (
 
 @admin.register(Programme)
 class ProgrammeAdmin(ApilosModelAdmin):
-    list_display = ("nom", "uuid")
+    list_display = (
+        "nom",
+        "uuid",
+        "numero_galion",
+    )
     fields = (
         "uuid",
         "nom",
@@ -42,7 +46,7 @@ class ProgrammeAdmin(ApilosModelAdmin):
             kwargs["queryset"] = Bailleur.objects.order_by("nom")
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
-    search_fields = ["nom", "numero_galion"]
+    search_fields = ["nom", "uuid", "numero_galion"]
 
 
 @admin.display(description="Programme")
