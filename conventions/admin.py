@@ -1,6 +1,8 @@
+from django import forms
 from django.contrib import admin
 
 from admin.admin import ApilosModelAdmin
+from conventions.models.choices import ConventionStatut
 
 from .models import AvenantType, Convention, Pret
 
@@ -12,6 +14,30 @@ def view_programme(convention):
         + f"{convention.lot.nb_logements} lgts - "
         + f"{convention.lot.get_type_habitat_display()}"
     )
+
+
+class ConventionModelForm(forms.ModelForm):
+    statut = forms.ChoiceField(choices=ConventionStatut.choices)
+
+    def __init__(self, *args, **kwargs):
+        initial = kwargs.get("initial", {})
+
+        instance = kwargs.get("instance", None)
+        if instance:
+            statut = ConventionStatut.get_by_label(instance.statut)
+            if statut:
+                initial["statut"] = statut.name
+
+        super().__init__(initial=initial, *args, **kwargs)
+
+    def _post_clean(self):
+        super()._post_clean()
+        statut = self.cleaned_data.get("statut")
+        self.cleaned_data["statut"] = ConventionStatut[statut].label
+
+    class Meta:
+        model = Convention
+        exclude = []
 
 
 @admin.register(Convention)
@@ -69,6 +95,8 @@ class ConventionAdmin(ApilosModelAdmin):
         "cree_par",
         "cree_le",
     )
+
+    form = ConventionModelForm
 
 
 @admin.register(Pret)
