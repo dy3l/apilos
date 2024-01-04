@@ -104,7 +104,7 @@ class RecapitulatifView(BaseConventionView):
 
         if request.POST.get("update_programme_number"):
             result = service.update_programme_number()
-        if request.POST.get("update_convention_number"):
+        elif request.POST.get("update_convention_number"):
             result = service.update_convention_number()
         elif request.POST.get("cancel_convention"):
             result = service.cancel_convention()
