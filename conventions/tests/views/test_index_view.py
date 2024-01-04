@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import date, timedelta
 
 from bs4 import BeautifulSoup
 from django.http.request import HttpRequest
@@ -127,8 +127,10 @@ class ConventionIndexFiltersViewTests(TestCase):
         response = self.client.get(
             reverse("conventions:search_instruction"), data={"year": "2000"}
         )
+
         self.assertEqual(
-            response.context["years"], ["2023", "2022", "2021", "2020", "2019"]
+            response.context["years"],
+            sorted([str(d) for d in range(2019, date.today().year + 1)], reverse=True),
         )
         self.assertEqual(response.context["total_conventions"], 4)
         self.assertEqual(response.context["filtered_conventions_count"], 0)
