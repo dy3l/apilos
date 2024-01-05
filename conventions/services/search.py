@@ -3,6 +3,11 @@ from collections import defaultdict
 from copy import copy
 
 from django.conf import settings
+from django.contrib.postgres.search import (
+    SearchQuery,
+    SearchVector,
+    TrigramSimilarity,
+)
 from django.core.paginator import Paginator
 from django.db.models import Q, QuerySet
 
@@ -181,10 +186,31 @@ class UserConventionEnInstructionSearchService(UserConventionSearchService):
     def _build_queryset_extra_filters(self):
         if self.search_input:
             self.extra_filters = (
-                Q(programme__nom__icontains=self.search_input)
+                Q(
+                    search_programme_nom=SearchQuery(
+                        self.search_input, search_type="plain", config="french"
+                    )
+                )
+                | Q(programme_nom_similarity__gt=0.3)
+                # Q(programme__nom__icontains=self.search_input)
                 | Q(programme__code_postal__icontains=self.search_input)
                 | Q(programme__numero_galion__icontains=self.search_input)
             )
+
+    def _get_base_queryset(self) -> QuerySet:
+        return (
+            super()
+            ._get_base_queryset()
+            .annotate(
+                search_programme_nom=SearchVector("programme__nom", config="french")
+            )
+            .annotate(
+                programme_nom_similarity=TrigramSimilarity(
+                    "programme__nom",
+                    self.search_input,
+                ),
+            )
+        )
 
 
 class UserConventionActivesSearchService(UserConventionSearchService):
